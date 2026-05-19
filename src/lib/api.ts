@@ -84,9 +84,12 @@ export const downloadsAPI = {
 
 export const adminAPI = {
   stats:          () => api.get('/api/products/admin/stats/'),
-  createProduct:  (d: any) => api.post('/api/products/', d),
-  updateProduct:  (id: string, d: any) => api.patch(`/api/products/${id}/`, d),
-  deleteProduct:  (id: string) => api.delete(`/api/products/${id}/`),
+  // Product CRUD lives under /api/products/admin/. List+create on /admin/list/,
+  // detail/update/delete on /admin/<slug>/. Backend uses slug as lookup, not id.
+  listProducts:   () => api.get('/api/products/admin/list/'),
+  createProduct:  (d: any) => api.post('/api/products/admin/list/', d),
+  updateProduct:  (slug: string, d: any) => api.patch(`/api/products/admin/${slug}/`, d),
+  deleteProduct:  (slug: string) => api.delete(`/api/products/admin/${slug}/`),
   uploadInstaller:(slug: string, f: FormData) => api.post(`/api/products/${slug}/upload-installer/`, f, { headers: { 'Content-Type': 'multipart/form-data' } }),
   orders:         () => api.get('/api/orders/admin/'),
   users:          () => api.get('/api/auth/admin/users/'),

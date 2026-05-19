@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Key, ShoppingBag, Download, User, ArrowRight, Copy, CheckCircle2, Loader2, Package, ExternalLink } from 'lucide-react'
 import Navbar from '@/components/Navbar'
@@ -10,21 +11,30 @@ import { licensesAPI, ordersAPI, downloadsAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export default function DashboardPage() {
-  const { user } = useAuthStore()
+  const { user, isAuthenticated } = useAuthStore()
+  const router = useRouter()
   const [tab, setTab]         = useState<'licenses'|'orders'|'downloads'>('licenses')
   const [licenses,  setLicenses]  = useState<any[]>([])
   const [orders,    setOrders]    = useState<any[]>([])
   const [downloads, setDownloads] = useState<any[]>([])
   const [loading, setLoading]     = useState(true)
 
+  // Client-side auth guard (middleware is a no-op; see src/middleware.ts).
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/auth/login?from=/dashboard')
+    }
+  }, [isAuthenticated, router])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
     Promise.all([licensesAPI.mine(), ordersAPI.myOrders(), downloadsAPI.history()])
       .then(([l,o,d]) => {
         setLicenses(Array.isArray(l.data) ? l.data : l.data.results || [])
         setOrders(Array.isArray(o.data) ? o.data : o.data.results || [])
         setDownloads(Array.isArray(d.data) ? d.data : d.data.results || [])
       }).catch(()=>{}).finally(()=>setLoading(false))
-  }, [])
+  }, [isAuthenticated])
 
   const copy = (text: string) => { navigator.clipboard.writeText(text); toast.success('Copied!') }
 
